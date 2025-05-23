@@ -34,10 +34,197 @@ STEP-5: Display the obtained cipher text.
 
 
 
-Program:
+### Program:
+~~~
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <string.h> 
+#include <ctype.h> 
+ 
+#define SIZE 30 
+ 
+void toLowerCase(char str[], int length) { 
+    for (int i = 0; i < length; i++) { 
+        if (str[i] >= 'A' && str[i] <= 'Z') { 
+            str[i] = str[i] + 32; 
+        } 
+    } 
+} 
+ 
+int removeSpaces(char* str, int length) { 
+    int count = 0; 
+    for (int i = 0; i < length; i++) { 
+        if (str[i] != ' ') { 
+            str[count++] = str[i]; 
+        } 
+    } 
+    str[count] = '\0'; 
+    return count; 
+} 
+ 
+void generateKeyTable(char key[], int ks, char keyT[5][5]) { 
+    int i, j, k; 
+    int dicty[26] = {0};  
+ 
+    for (i = 0; i < ks; i++) { 
+        if (key[i] == 'j') key[i] = 'i'; 
+        dicty[key[i] - 'a'] = 1; 
+    } 
+ 
+    i = j = 0; 
+    for (k = 0; k < ks; k++) { 
+        if (dicty[key[k] - 'a'] == 1) { 
+            keyT[i][j++] = key[k]; 
+            dicty[key[k] - 'a'] = 2; 
+            if (j == 5) { i++; j = 0; } 
+        } 
+    } 
+ 
+    for (k = 0; k < 26; k++) { 
+        if (dicty[k] == 0 && k != ('j' - 'a')) { 
+            keyT[i][j++] = k + 'a'; 
+            if (j == 5) { i++; j = 0; } 
+        } 
+    } 
+} 
+ 
+void search(char keyT[5][5], char a, char b, int arr[]) { 
+    if (a == 'j') a = 'i'; 
+    if (b == 'j') b = 'i'; 
+ 
+    for (int i = 0; i < 5; i++) { 
+        for (int j = 0; j < 5; j++) { 
+            if (keyT[i][j] == a) { 
+                arr[0] = i; 
+                arr[1] = j; 
+            } 
+            if (keyT[i][j] == b) { 
+                arr[2] = i; 
+                arr[3] = j; 
+            } 
+        } 
+    } 
+} 
+ 
+int mod5(int a) { 
+    return (a + 5) % 5; 
+} 
+ 
+int prepareText(char str[], int length) { 
+    char temp[SIZE * 2]; 
+    int i, j = 0; 
+ 
+    for (i = 0; i < length; i++) { 
+        temp[j++] = str[i]; 
+ 
+         
+        if (i < length - 1 && str[i] == str[i + 1]) { 
+            temp[j++] = 'x'; 
+        } 
+    } 
+ 
+    if (j % 2 != 0) { 
+        temp[j++] = 'x'; 
+    } 
+ 
+    temp[j] = '\0'; 
+    strcpy(str, temp); 
+    return j; 
+} 
+ 
+void encrypt(char str[], char keyT[5][5], int length) { 
+    int a[4]; 
+ 
+    for (int i = 0; i < length; i += 2) { 
+        search(keyT, str[i], str[i + 1], a); 
+ 
+        if (a[0] == a[2]) {   
+            str[i] = keyT[a[0]][mod5(a[1] + 1)]; 
+            str[i + 1] = keyT[a[0]][mod5(a[3] + 1)]; 
+        } else if (a[1] == a[3]) {   
+            str[i] = keyT[mod5(a[0] + 1)][a[1]]; 
+            str[i + 1] = keyT[mod5(a[2] + 1)][a[1]]; 
+        } else {   
+            str[i] = keyT[a[0]][a[3]]; 
+            str[i + 1] = keyT[a[2]][a[1]]; 
+        } 
+    } 
+} 
+ 
+void decrypt(char str[], char keyT[5][5], int length) { 
+    int a[4]; 
+ 
+    for (int i = 0; i < length; i += 2) { 
+        search(keyT, str[i], str[i + 1], a); 
+ 
+        if (a[0] == a[2]) {   
+            str[i] = keyT[a[0]][mod5(a[1] - 1)]; 
+            str[i + 1] = keyT[a[0]][mod5(a[3] - 1)]; 
+        } else if (a[1] == a[3]) {   
+            str[i] = keyT[mod5(a[0] - 1)][a[1]]; 
+            str[i + 1] = keyT[mod5(a[2] - 1)][a[1]]; 
+        } else {  
+            str[i] = keyT[a[0]][a[3]]; 
+            str[i + 1] = keyT[a[2]][a[1]]; 
+        } 
+    } 
+} 
+ 
+void encryptByPlayfairCipher(char str[], char key[]) { 
+    int ps, ks; 
+    char keyT[5][5]; 
+ 
+    ks = removeSpaces(key, strlen(key)); 
+    toLowerCase(key, ks); 
+ 
+    ps = removeSpaces(str, strlen(str)); 
+    toLowerCase(str, ps); 
+    ps = prepareText(str, ps); 
+ 
+    generateKeyTable(key, ks, keyT); 
+    encrypt(str, keyT, ps); 
+} 
+ 
+void decryptByPlayfairCipher(char str[], char key[]) { 
+    int ps, ks; 
+    char keyT[5][5]; 
+ 
+    ks = removeSpaces(key, strlen(key)); 
+    toLowerCase(key, ks); 
+ 
+    ps = removeSpaces(str, strlen(str)); 
+    toLowerCase(str, ps); 
+     
+    generateKeyTable(key, ks, keyT); 
+    decrypt(str, keyT, ps); 
+} 
+ 
+int main() { 
+    char str[SIZE], key[SIZE]; 
+ 
+    strcpy(str, "instrumentsz"); 
+    printf("Plain text: %s\n", str); 
+     
+    strcpy(key, "monarchy"); 
+    printf("Key text: %s\n", key); 
+ 
+    encryptByPlayfairCipher(str, key); 
+    printf("Cipher text: %s\n", str); 
+ 
+    decryptByPlayfairCipher(str, key); 
+    printf("Decrypted text: %s\n", str); 
+ 
+    return 0; 
+}
+~~~
 
 
 
 
 
-Output:
+
+### Output:
+<img width="670" alt="image" src="https://github.com/user-attachments/assets/1b26a91c-e070-4afa-8be7-447ff24b0d08" />
+
+### Result:
+  Hence the output is verified sucessfully
