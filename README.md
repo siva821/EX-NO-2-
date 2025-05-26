@@ -9,7 +9,7 @@
 
 To write a C program to implement the Playfair Substitution technique.
 
-## DESCRIPTION:
+## DESCRIPTION: 
 
 The Playfair cipher starts with creating a key table. The key table is a 5×5 grid of letters that will act as the key for encrypting your plaintext. Each of the 25 letters must be unique and one letter of the alphabet is omitted from the table (as there are 25 spots and 26 letters in the alphabet).
 
